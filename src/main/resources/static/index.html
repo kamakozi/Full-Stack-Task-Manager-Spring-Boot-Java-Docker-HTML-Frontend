@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Tak Manager - Login/Register</title>
+</head>
+<body>
+<h2>Register</h2>
+<form id="registerForm">
+    <input type="text" placeholder="Username" id="regUsername" required />
+    <input type="password" placeholder="Password" id="regPassword" required />
+    <button type="submit">Register</button>
+</form>
+
+<h2>Login</h2>
+<form id="loginForm">
+    <input type="text" placeholder="Username" id="loginUsername" required />
+    <input type="password" placeholder="Password" id="loginPassword" required />
+    <button type="submit">Login</button>
+</form>
+
+<div id="response" style="margin-top: 20px; color: red;"></div>
+
+<script>
+    const registerForm = document.getElementById("registerForm");
+    const loginForm = document.getElementById("loginForm");
+    const responseDiv = document.getElementById("response");
+
+    // ✅ Register user
+    registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const res = await fetch("http://localhost:8080/api/users/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: document.getElementById("regUsername").value,
+                password: document.getElementById("regPassword").value
+            })
+        });
+        const text = await res.text();
+        responseDiv.innerText = "✅ Register: " + text;
+    });
+
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const res = await fetch("http://localhost:8080/api/users/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: document.getElementById("loginUsername").value,
+                password: document.getElementById("loginPassword").value
+            })
+        });
+
+        if (res.ok) {
+            const user = await res.json();
+            localStorage.setItem("userId", user.id);
+            window.location.href = "tasks.html";
+        } else {
+            const text = await res.text();
+            responseDiv.innerText = "Login failed: " + text;
+        }
+    });
+</script>
+</body>
+</html>

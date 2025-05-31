@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Task Manager</title>
+</head>
+<body>
+<h1>Your Tasks</h1>
+
+<form id="taskForm">
+    <input type="text" id="title" placeholder="Task Title" required />
+    <input type="text" id="description" placeholder="Task Description" required />
+    <button type="submit">Add Task</button>
+</form>
+
+<ul id="taskList"></ul>
+
+<script>
+    const userId = localStorage.getItem("userId");
+    const API = "http://localhost:8080/api/tasks";
+
+    async function fetchTasks() {
+        const res = await fetch(`${API}/user/${userId}`);
+        const tasks = await res.json();
+
+        const list = document.getElementById("taskList");
+        list.innerHTML = "";
+
+        tasks.forEach(task => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <strong>${task.title}</strong> - ${task.description}
+                <button onclick="editTask(${task.id}, '${task.title}', '${task.description}')">Edit</button>
+                <button onclick="deleteTask(${task.id})">DELETE</button>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    document.getElementById("taskForm").addEventListener("submit", async e => {
+        e.preventDefault();
+
+        const title = document.getElementById("title").value;
+        const description = document.getElementById("description").value;
+
+        await fetch(`${API}/create/${userId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, description, completed: false })
+        });
+
+        document.getElementById("title").value = "";
+        document.getElementById("description").value = "";
+
+        fetchTasks();
+    });
+
+    async function deleteTask(id) {
+        await fetch(`${API}/delete/${id}`, { method: "DELETE" });
+        fetchTasks();
+    }
+
+    function editTask(id, oldTitle, oldDescription) {
+        const newTitle = prompt("Edit title:", oldTitle);
+        const newDescription = prompt("Edit description:", oldDescription);
+
+        if (newTitle && newDescription) {
+            fetch(`${API}/update`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, title: newTitle, description: newDescription, completed: false })
+            }).then(fetchTasks);
+        }
+    }
+
+    fetchTasks();
+</script>
+</body>
+</html>
